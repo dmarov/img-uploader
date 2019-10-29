@@ -1,8 +1,7 @@
 extern crate clap;
 use clap::{Arg, App as ClapApp};
-use actix_web::{web, App as ActixApp, HttpResponse, HttpServer, Responder, Error};
+use actix_web::{web, App as ActixApp, HttpServer};
 use listenfd::ListenFd;
-use futures::future::{ok, Future};
 mod controller;
 
 fn main() {
