@@ -22,17 +22,6 @@ fn main() {
             .takes_value(true)
             .required(true),
 
-        Arg::with_name("hres")
-            .long("hres")
-            .value_name("HORIZONTAL PREVIEW RESOLUTION")
-            .takes_value(true)
-            .required(true),
-
-        Arg::with_name("vres")
-            .long("vres")
-            .value_name("VERTICAL PREVIEW RESOLUTION")
-            .takes_value(true)
-            .required(true),
     ];
 
     let mut app = ClapApp::new("Image preview generation server")
