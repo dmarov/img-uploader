@@ -1,12 +1,10 @@
 use std::io::Write;
 extern crate tokio;
-use tokio::prelude::*;
-use futures::future::{self, ok, Future, lazy};
-use futures::Async;
+use futures::{Async, future::Future};
 
-struct UploadWithThumbnailFuture {
-    url: String,
-    path: String,
+pub struct UploadWithThumbnailFuture {
+    pub url: String,
+    pub path: String,
 }
 
 impl Future for UploadWithThumbnailFuture {
@@ -63,7 +61,6 @@ impl Future for UploadWithThumbnailFuture {
             let mut file = std::fs::File::create(full_name)
                 .unwrap();
             file.write_all(new_bytes).unwrap();
-            println!("future executed");
         }
 
         Ok(Async::Ready(()))

@@ -1,7 +1,7 @@
 use actix_web::{web, HttpResponse, Error};
 use futures::future::{self, ok, Future, lazy};
 use serde::Deserialize;
-use crate::core::img_processing;
+use crate::core::img_processing::UploadWithThumbnailFuture;
 
 #[derive(Deserialize)]
 pub struct RequestModel {
@@ -10,10 +10,13 @@ pub struct RequestModel {
 
 pub fn upload_images(request_data: web::Json<RequestModel>) -> Box<dyn Future<Item = HttpResponse, Error = Error>> {
 
+
     for url in request_data.urls.iter() {
 
-        img_processing::upload_with_thumbnail(url.to_string(), "/tmp/images".to_string())
-            .unwrap();
+        tokio::spawn(UploadWithThumbnailFuture{
+            url: url.to_string(),
+            path: "/tmp/images".to_string()
+        });
     }
 
     Box::new(ok::<_, Error>(
