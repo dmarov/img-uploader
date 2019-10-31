@@ -1,35 +1,22 @@
-use actix_web::{web, HttpResponse, Error, client::Client};
-use futures::future::{ok, Future, lazy};
+use actix_web::{web, HttpResponse, Error};
+use futures::future::{ok, Future};
 use serde::Deserialize;
-use actix_rt::System;
+use crate::core::img_processing;
 
 #[derive(Deserialize)]
 pub struct RequestModel {
-    images: Vec<String>,
-    hres: u8,
-    vres: u8,
+    urls: Vec<String>,
 }
 
-pub fn index(request_data: web::Json<RequestModel>) -> Box<dyn Future<Item = HttpResponse, Error = Error>> {
+pub fn upload_images(request_data: web::Json<RequestModel>) -> Box<dyn Future<Item = HttpResponse, Error = Error>> {
 
-    for url in request_data.images.iter() {
+    for url in request_data.urls.iter() {
 
-        // System::new("test").block_on(lazy(|| {
-        tokio::spawn(lazy(move || {
-            Client::new()
-                .get(url)
-                .send()
-                .map_err(|_| ())
-                .and_then(|response| {
-                    println!("Response: {:?}", response);
-                    Ok(())
-                });
-        }));
-        // })).unwrap();
+        img_processing::async_upload_with_thumbnail(url.to_string(), "/tmp/images".to_string());
     }
 
     Box::new(ok::<_, Error>(
-        HttpResponse::Ok()
-            .json("ok")
+        HttpResponse::NoContent()
+            .finish()
     ))
 }

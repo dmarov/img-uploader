@@ -1,52 +1,39 @@
-extern crate clap;
-use clap::{Arg, App as ClapApp};
-use actix_web::{web, App as ActixApp, HttpServer};
-use listenfd::ListenFd;
 mod controller;
+mod core;
 
 fn main() {
 
-    let args = [
-
-        Arg::with_name("listen")
-            .short("l")
-            .long("listen")
-            .value_name("LISTEN ADDRESS")
-            .takes_value(true)
-            .required(true),
-
-        Arg::with_name("fs-storage-path")
-            .long("fs-storage-path")
-            .value_name("FILE SYSTEM STORAGE PATH")
-            .help("sets directory to store previews")
-            .takes_value(true)
-            .required(true),
-
-    ];
-
-    let mut app = ClapApp::new("Image preview generation server")
+    let app = clap::App::new("Image preview generation server")
         .version("1.0")
         .author("Dmitry Marov <d.marov94@gmail.com>")
-        .about("Server to generate image preview");
-
-    for arg in args.iter() {
-
-        app = app.arg(arg);
-    }
+        .about("Server to generate image preview")
+        .arg(
+            clap::Arg::with_name("fs-upload-dir")
+                .long("fs-upload-dir")
+                .value_name("FILE SYSTEM UPLOAD DIRECTORY")
+                .help("sets directory to store previews")
+                .takes_value(true)
+                .required(true),
+        )
+        .arg(
+            clap::Arg::with_name("listen")
+                .short("l")
+                .long("listen")
+                .value_name("LISTEN ADDRESS")
+                .takes_value(true)
+                .required(true),
+        );
 
     let matches = app.get_matches();
     let addr = matches.value_of("listen").unwrap();
 
-    let mut listenfd = ListenFd::from_env();
-    let mut server = HttpServer::new(|| {
-        ActixApp::new().route("/img-uploader", web::post().to_async(controller::img_uploader::index))
+    let server = actix_web::HttpServer::new(|| {
+        actix_web::App::new()
+            .route("/img-uploader", actix_web::web::post().to_async(controller::img_uploader::upload_images))
     });
 
-    server = if let Some(l) = listenfd.take_tcp_listener(0).unwrap() {
-        server.listen(l).unwrap()
-    } else {
-        server.bind(addr).unwrap()
-    };
-
-    server.run().unwrap();
+    server.bind(addr)
+        .unwrap()
+        .run()
+        .unwrap();
 }
