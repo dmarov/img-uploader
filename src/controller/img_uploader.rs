@@ -1,5 +1,5 @@
 use actix_web::{web, HttpResponse, Error};
-use futures::future::{ok, Future};
+use futures::future::{self, ok, Future, lazy};
 use serde::Deserialize;
 use crate::core::img_processing;
 
@@ -12,7 +12,8 @@ pub fn upload_images(request_data: web::Json<RequestModel>) -> Box<dyn Future<It
 
     for url in request_data.urls.iter() {
 
-        img_processing::async_upload_with_thumbnail(url.to_string(), "/tmp/images".to_string());
+        img_processing::upload_with_thumbnail(url.to_string(), "/tmp/images".to_string())
+            .unwrap();
     }
 
     Box::new(ok::<_, Error>(
