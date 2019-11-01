@@ -25,9 +25,12 @@ fn main() {
         );
 
     let matches = app.get_matches();
-    let addr = matches.value_of("listen").unwrap();
 
-    let server = actix_web::HttpServer::new(|| {
+    let addr = matches.value_of("listen")
+        .unwrap();
+
+    let server = actix_web::HttpServer::new(move || {
+
         actix_web::App::new()
             .route("/img-uploader", actix_web::web::post().to_async(controller::img_uploader::upload_images))
     });
