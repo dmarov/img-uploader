@@ -10,7 +10,6 @@ pub struct RequestModel {
 
 pub fn upload_images(request_data: web::Json<RequestModel>) -> Box<dyn Future<Item = HttpResponse, Error = Error>> {
 
-
     for url in request_data.urls.iter() {
 
         tokio::spawn(UploadWithThumbnailFuture{

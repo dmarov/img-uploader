@@ -45,13 +45,13 @@ impl UploadWithThumbnailFuture {
 
         let thumbnail_bytes = thumbnail_buf.as_slice();
 
-        let ext: String = match format {
-            image::ImageFormat::PNG => String::from("png"),
-            image::ImageFormat::JPEG => String::from("jpg"),
-            image::ImageFormat::GIF => String::from("gif"),
-            image::ImageFormat::WEBP => String::from("webp"),
-            image::ImageFormat::BMP => String::from("bmp"),
-            image::ImageFormat::ICO => String::from("ico"),
+        let ext: &str = match format {
+            image::ImageFormat::PNG => "png",
+            image::ImageFormat::JPEG => "jpg",
+            image::ImageFormat::GIF => "gif",
+            image::ImageFormat::WEBP => "webp",
+            image::ImageFormat::BMP => "bmp",
+            image::ImageFormat::ICO => "ico",
             _ => return Err(ProcessingError{
                 msg: "unsupported image format".to_string()
             }),
@@ -65,12 +65,14 @@ impl UploadWithThumbnailFuture {
         };
 
         let file_name = format!("{:x}.{}", md5, ext);
+
         match self.write_file(file_name, bytes) {
             Ok(res) => res,
             Err(error) => return Err(error),
         };
 
         let thumbnail_file_name = format!("{:x}_100x100.{}", md5, ext);
+
         match self.write_file(thumbnail_file_name, thumbnail_bytes) {
             Ok(res) => res,
             Err(error) => return Err(error),
