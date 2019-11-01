@@ -23,41 +23,29 @@ impl fmt::Display for ProcessingError {
 
 impl UploadWithThumbnailFuture {
 
-    fn process_buffer(&mut self, buf: Vec<u8>) -> std::result::Result<(), ProcessingError> {
-
-        let bytes = buf.as_slice();
+    fn process_buffer(&self, bytes: &[u8]) -> std::result::Result<(), ProcessingError> {
 
         let img = match image::load_from_memory(bytes) {
             Ok(img) => img,
             Err(error) => return Err(ProcessingError{msg: error.to_string()}),
         };
 
-        let (width, height) = img.dimensions();
-        let min = std::cmp::min(width, height);
-        let x = (width - min) / 2;
-        let y = (height - min) / 2;
-        let square_img = img.clone().crop(x, y, min, min);
-        let new_img = square_img.thumbnail(100, 100);
+        let thumbnail_img = self.generate_thumbnail(&img);
 
         let format = match image::guess_format(bytes) {
             Ok(format) => format,
             Err(error) => return Err(ProcessingError{msg: error.to_string()}),
         };
 
-        let mut new_buf = Vec::new();
-        match new_img.write_to(&mut new_buf, format) {
+        let mut thumbnail_buf = Vec::new();
+        match thumbnail_img.write_to(&mut thumbnail_buf, format) {
             Ok(res) => res,
             Err(error) => return Err(ProcessingError{msg: error.to_string()}),
         };
 
-        let new_bytes = new_buf.as_slice(); 
+        let thumbnail_bytes = thumbnail_buf.as_slice();
 
-        match std::fs::create_dir_all(&self.path) {
-            Ok(res) => res,
-            Err(error) => return Err(ProcessingError{msg: error.to_string()}),
-        };
-
-        let extension: String = match format {
+        let ext: String = match format {
             image::ImageFormat::PNG => String::from("png"),
             image::ImageFormat::JPEG => String::from("jpg"),
             image::ImageFormat::GIF => String::from("gif"),
@@ -70,35 +58,53 @@ impl UploadWithThumbnailFuture {
         };
 
         let md5 = md5::compute(bytes);
-        let md5_str = String::from(format!("{:x}", md5));
 
-        let mut file_name = String::new();
-        let mut thumbnail_file_name = String::new();
+        match std::fs::create_dir_all(&self.path) {
+            Ok(res) => res,
+            Err(error) => return Err(ProcessingError{msg: error.to_string()}),
+        };
 
-        file_name.push_str(&md5_str);
-        file_name.push_str(".");
-        file_name.push_str(extension.as_str());
+        let file_name = format!("{:x}.{}", md5, ext);
+        match self.write_file(file_name, bytes) {
+            Ok(res) => res,
+            Err(error) => return Err(error),
+        };
 
-        thumbnail_file_name.push_str(&md5_str);
-        thumbnail_file_name.push_str("_100x100");
-        thumbnail_file_name.push_str(".");
-        thumbnail_file_name.push_str(extension.as_str());
-
-        let full_name = std::path::Path::new(&self.path)
-            .join(file_name);
-
-        let thumbnail_full_name = std::path::Path::new(&self.path)
-            .join(thumbnail_file_name);
-
-        let mut file = std::fs::File::create(full_name)
-            .unwrap();
-        file.write_all(bytes).unwrap();
-
-        let mut thumbnail_file = std::fs::File::create(thumbnail_full_name)
-            .unwrap();
-        thumbnail_file.write_all(new_bytes).unwrap();
+        let thumbnail_file_name = format!("{:x}_100x100.{}", md5, ext);
+        match self.write_file(thumbnail_file_name, thumbnail_bytes) {
+            Ok(res) => res,
+            Err(error) => return Err(error),
+        };
 
         Ok(())
+    }
+
+    fn write_file(&self, name: String, bytes: &[u8]) -> std::result::Result<(), ProcessingError>{
+
+        let full_name = std::path::Path::new(&self.path)
+            .join(name);
+
+        let mut file = match std::fs::File::create(full_name) {
+            Ok(file) => file,
+            Err(error) => return Err(ProcessingError{msg: error.to_string()}),
+        };
+
+        match file.write_all(bytes) {
+            Ok(res) => res,
+            Err(error) => return Err(ProcessingError{msg: error.to_string()}),
+        };
+
+        Ok(())
+    }
+
+    fn generate_thumbnail(&self, img: &image::DynamicImage) -> image::DynamicImage {
+
+        let (width, height) = img.dimensions();
+        let min = std::cmp::min(width, height);
+        let x = (width - min) / 2;
+        let y = (height - min) / 2;
+        let square_img = img.clone().crop(x, y, min, min);
+        square_img.thumbnail(100, 100)
     }
 }
 
@@ -133,7 +139,7 @@ impl Future for UploadWithThumbnailFuture {
             Ok(res) => res,
         };
 
-        match self.process_buffer(buf) {
+        match self.process_buffer(buf.as_slice()) {
             Ok(_) => Ok(Async::Ready(())),
             Err(error) => {
                 println!("{:?}", error);
