@@ -1,5 +1,5 @@
 use actix_web::{web, HttpResponse, Error};
-use futures::future::{self, ok, Future, lazy};
+use futures::future::{ok, Future};
 use serde::Deserialize;
 use crate::core::img_processing::UploadWithThumbnailFuture;
 
