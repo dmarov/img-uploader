@@ -7,9 +7,7 @@ img-uploader --fs-upload-dir=/tmp/img-previews --hres=100 --vres=100 --listen=0.
 ## Usage
 
 POST /img-uploader
-
-body: application/json
-
+Content-Type: application/json
 ```
 
 {

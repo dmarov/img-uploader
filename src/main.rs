@@ -1,6 +1,10 @@
 mod controller;
 mod core;
 
+pub struct AppState {
+    upload_dir: String,
+}
+
 fn main() {
 
     let app = clap::App::new("Image preview generation server")
@@ -29,9 +33,18 @@ fn main() {
     let addr = matches.value_of("listen")
         .unwrap();
 
+    let upload_dir = matches.value_of("fs-upload-dir")
+        .unwrap()
+        .to_string();
+
+    let data = actix_web::web::Data::new(AppState {
+        upload_dir,
+    });
+
     let server = actix_web::HttpServer::new(move || {
 
         actix_web::App::new()
+            .register_data(data.clone())
             .route("/img-uploader", actix_web::web::post().to_async(controller::img_uploader::upload_images))
     });
 
