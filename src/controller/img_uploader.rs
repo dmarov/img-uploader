@@ -8,7 +8,10 @@ pub struct RequestModel {
     urls: Vec<String>,
 }
 
-pub fn upload_images(request_data: web::Json<RequestModel>, data: web::Data<crate::AppState>) -> Box<dyn Future<Item = HttpResponse, Error = Error>> {
+pub fn upload_images(
+        request_data: web::Json<RequestModel>,
+        data: web::Data<crate::AppState>
+    )-> Box<dyn Future<Item = HttpResponse, Error = Error>> {
 
     for url in request_data.urls.iter() {
 
