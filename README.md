@@ -2,13 +2,21 @@
 cargo build --release
 
 ## Run
+```
+docker-compose up
+```
+or
+```
 ./target/release/img-uploader --fs-upload-dir=/tmp/img-previews --listen=0.0.0.0:8080
+```
 
 ## Usage
 
+Example of http request
+
+```
 POST /img-uploader
 Content-Type: application/json
-```
 
 {
     "urls": [
