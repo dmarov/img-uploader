@@ -1,8 +1,8 @@
 ## Build
-cargo build
+cargo build --release
 
 ## Run
-img-uploader --fs-upload-dir=/tmp/img-previews --hres=100 --vres=100 --listen=0.0.0.0:8080
+./target/release/img-uploader --fs-upload-dir=/tmp/img-previews --listen=0.0.0.0:8080
 
 ## Usage
 
